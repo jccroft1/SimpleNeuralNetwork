@@ -114,9 +114,9 @@ func (n *Network) ProcessBatch(train []Data, eta float64) {
 	biasNabla := make([][]float64, len(n.Biases))
 	for i := 0; i < len(biasNabla); i++ {
 		biasNabla[i] = make([]float64, len(n.Biases[i]))
-		for j := 0; j < len(biasNabla[i]); j++ {
-			biasNabla[i][j] = 0
-		}
+		// for j := 0; j < len(biasNabla[i]); j++ {
+		// 	biasNabla[i][j] = 0
+		// }
 	}
 
 	weightsNabla := make([][][]float64, len(n.Weights))
@@ -124,9 +124,9 @@ func (n *Network) ProcessBatch(train []Data, eta float64) {
 		weightsNabla[i] = make([][]float64, len(n.Weights[i]))
 		for j := 0; j < len(weightsNabla[i]); j++ {
 			weightsNabla[i][j] = make([]float64, len(n.Weights[i][j]))
-			for k := 0; k < len(weightsNabla[i][j]); k++ {
-				weightsNabla[i][j][k] = 0
-			}
+			// for k := 0; k < len(weightsNabla[i][j]); k++ {
+			// 	weightsNabla[i][j][k] = 0
+			// }
 		}
 	}
 
@@ -169,9 +169,9 @@ func (n *Network) backprop(data Data) ([][]float64, [][][]float64) {
 	biasNabla := make([][]float64, len(n.Biases))
 	for i := 0; i < len(biasNabla); i++ {
 		biasNabla[i] = make([]float64, len(n.Biases[i]))
-		for j := 0; j < len(biasNabla[i]); j++ {
-			biasNabla[i][j] = 0
-		}
+		// for j := 0; j < len(biasNabla[i]); j++ {
+		// 	biasNabla[i][j] = 0
+		// }
 	}
 
 	weightsNabla := make([][][]float64, len(n.Weights))
@@ -179,9 +179,9 @@ func (n *Network) backprop(data Data) ([][]float64, [][][]float64) {
 		weightsNabla[i] = make([][]float64, len(n.Weights[i]))
 		for j := 0; j < len(weightsNabla[i]); j++ {
 			weightsNabla[i][j] = make([]float64, len(n.Weights[i][j]))
-			for k := 0; k < len(weightsNabla[i][j]); k++ {
-				weightsNabla[i][j][k] = 0
-			}
+			// for k := 0; k < len(weightsNabla[i][j]); k++ {
+			// 	weightsNabla[i][j][k] = 0
+			// }
 		}
 	}
 

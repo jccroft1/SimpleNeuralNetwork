@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"neuralnetworksanddeeplearning.com/chap1/network"
+	"github.com/jccroft1/SimpleNeuralNetwork/network"
 )
 
 const numLabels = 10
