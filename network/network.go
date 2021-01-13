@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"sync"
 )
 
 type Data struct {
@@ -110,39 +111,52 @@ func (n *Network) SGD(train []Data, epochs, batchSize int, learningRate float64,
 	}
 }
 
+type backpropResult struct {
+	Bias   [][]float64
+	Weight [][][]float64
+}
+
 func (n *Network) ProcessBatch(train []Data, eta float64) {
-	biasNabla := make([][]float64, len(n.Biases))
-	for i := 0; i < len(biasNabla); i++ {
+	biasNabla := make([][]float64, n.Layers-1)
+	for i := 0; i < n.Layers-1; i++ {
 		biasNabla[i] = make([]float64, len(n.Biases[i]))
-		// for j := 0; j < len(biasNabla[i]); j++ {
-		// 	biasNabla[i][j] = 0
-		// }
 	}
 
-	weightsNabla := make([][][]float64, len(n.Weights))
-	for i := 0; i < len(weightsNabla); i++ {
-		weightsNabla[i] = make([][]float64, len(n.Weights[i]))
-		for j := 0; j < len(weightsNabla[i]); j++ {
-			weightsNabla[i][j] = make([]float64, len(n.Weights[i][j]))
-			// for k := 0; k < len(weightsNabla[i][j]); k++ {
-			// 	weightsNabla[i][j][k] = 0
-			// }
+	weightsNabla := make([][][]float64, n.Layers-1)
+	for i := 0; i < n.Layers-1; i++ {
+		weightsNabla[i] = make([][]float64, n.Sizes[i+1])
+		for j := 0; j < n.Sizes[i+1]; j++ {
+			weightsNabla[i][j] = make([]float64, n.Sizes[i])
 		}
 	}
 
-	for _, x := range train {
-		biasNablaDelta, weightsNablaDelta := n.backprop(x)
+	var wg sync.WaitGroup
+	wg.Add(len(train))
+	ingest := make(chan backpropResult)
 
+	go func() {
+		wg.Wait()
+		close(ingest)
+	}()
+
+	for _, x := range train {
+		go func(data Data) {
+			ingest <- n.backprop(data)
+			wg.Done()
+		}(x)
+	}
+
+	for r := range ingest {
 		for i := range biasNabla {
 			for j := range biasNabla[i] {
-				biasNabla[i][j] += biasNablaDelta[i][j]
+				biasNabla[i][j] += r.Bias[i][j]
 			}
 		}
 
 		for i := range weightsNabla {
 			for j := range weightsNabla[i] {
 				for k := range weightsNabla[i][j] {
-					weightsNabla[i][j][k] += weightsNablaDelta[i][j][k]
+					weightsNabla[i][j][k] += r.Weight[i][j][k]
 				}
 			}
 		}
@@ -164,24 +178,18 @@ func (n *Network) ProcessBatch(train []Data, eta float64) {
 	}
 }
 
-func (n *Network) backprop(data Data) ([][]float64, [][][]float64) {
+func (n Network) backprop(data Data) backpropResult {
 	// init nablas
-	biasNabla := make([][]float64, len(n.Biases))
-	for i := 0; i < len(biasNabla); i++ {
-		biasNabla[i] = make([]float64, len(n.Biases[i]))
-		// for j := 0; j < len(biasNabla[i]); j++ {
-		// 	biasNabla[i][j] = 0
-		// }
+	biasNabla := make([][]float64, n.Layers-1)
+	for i := 0; i < n.Layers-1; i++ {
+		biasNabla[i] = make([]float64, n.Sizes[i+1])
 	}
 
-	weightsNabla := make([][][]float64, len(n.Weights))
-	for i := 0; i < len(weightsNabla); i++ {
-		weightsNabla[i] = make([][]float64, len(n.Weights[i]))
-		for j := 0; j < len(weightsNabla[i]); j++ {
-			weightsNabla[i][j] = make([]float64, len(n.Weights[i][j]))
-			// for k := 0; k < len(weightsNabla[i][j]); k++ {
-			// 	weightsNabla[i][j][k] = 0
-			// }
+	weightsNabla := make([][][]float64, n.Layers-1)
+	for i := 0; i < n.Layers-1; i++ {
+		weightsNabla[i] = make([][]float64, n.Sizes[i+1])
+		for j := 0; j < n.Sizes[i+1]; j++ {
+			weightsNabla[i][j] = make([]float64, n.Sizes[i])
 		}
 	}
 
@@ -251,7 +259,10 @@ func (n *Network) backprop(data Data) ([][]float64, [][][]float64) {
 		}
 	}
 
-	return biasNabla, weightsNabla
+	return backpropResult{
+		Bias:   biasNabla,
+		Weight: weightsNabla,
+	}
 }
 
 func (n *Network) Evaluate(test []Data) int {

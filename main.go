@@ -40,6 +40,6 @@ func main() {
 	}
 
 	n := network.New([]int{784, 30, 10})
-	// n.SGD(data[:50000], 5, 10, 3.0, data[50000:])
+	// n.SGD(data[:50000], 30, 10, 3.0, data[50000:])
 	n.SGD(data[:50000], 5, 10, 3.0, []network.Data{})
 }
