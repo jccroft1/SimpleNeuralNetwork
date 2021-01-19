@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/jccroft1/SimpleNeuralNetwork/network"
+	"github.com/jccroft1/SimpleNeuralNetwork/pkg/network"
 )
 
 const numLabels = 10

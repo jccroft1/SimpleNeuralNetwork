@@ -9,8 +9,8 @@ import (
 	"runtime/pprof"
 	"time"
 
-	"github.com/jccroft1/SimpleNeuralNetwork/mnist"
-	"github.com/jccroft1/SimpleNeuralNetwork/network"
+	"github.com/jccroft1/SimpleNeuralNetwork/pkg/mnist"
+	"github.com/jccroft1/SimpleNeuralNetwork/pkg/network"
 )
 
 var (
@@ -23,7 +23,7 @@ func main() {
 
 	rand.Seed(time.Now().UnixNano())
 
-	data, err := mnist.Load("train", "../../resources")
+	data, err := mnist.Load("train", "../../assets")
 	if err != nil {
 		panic(err)
 	}

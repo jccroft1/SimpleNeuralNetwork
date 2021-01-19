@@ -1,4 +1,4 @@
-# MNIST Data 
+# Assets
 
 Place the mnist data (http://yann.lecun.com/exdb/mnist/) in this folder with the below names. 
 
