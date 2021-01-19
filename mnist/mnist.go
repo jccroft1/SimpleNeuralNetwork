@@ -37,10 +37,10 @@ type Label uint8
 // loc represents where the mnist files are held
 func Load(typ, loc string) ([]network.Data, error) {
 	const (
-		trainLabel = "train-labels-idx1-ubyte"
-		trainData  = "train-images-idx3-ubyte"
-		testLabel  = "t10k-labels-idx1-ubyte"
-		testData   = "t10k-images-idx3-ubyte"
+		trainLabel = "train-labels.idx1-ubyte"
+		trainData  = "train-images.idx3-ubyte"
+		testLabel  = "t10k-labels.idx1-ubyte"
+		testData   = "t10k-images.idx3-ubyte"
 	)
 
 	var labelFile, dataFile string
