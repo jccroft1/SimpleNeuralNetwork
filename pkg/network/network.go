@@ -24,13 +24,12 @@ func sigmoidPrime(z float64) float64 {
 // New creates a Network struct
 // Assumes first layer is input
 // Inits biases and weights to normal distribution
-func New(sizes []int, cost Cost) Network {
+func New(sizes []int) Network {
 	n := Network{
 		Layers:  len(sizes),
 		Sizes:   sizes,
 		Biases:  make([][]float64, len(sizes)-1),
 		Weights: make([][][]float64, len(sizes)-1),
-		Cost:    cost,
 	}
 
 	// Init bias values
@@ -63,7 +62,6 @@ type Network struct {
 	Sizes   []int
 	Biases  [][]float64
 	Weights [][][]float64
-	Cost    Cost
 }
 
 func (n Network) FeedForward(a []float64) ([]float64, error) {
@@ -98,14 +96,14 @@ func (n Network) feedLayer(in []float64, layer int) []float64 {
 
 // SGD trains the neural network using mini-batch stochastic gradient
 // descent.
-func (n *Network) SGD(train []Data, test []Data, epochs, batchSize int, learningRate float64, lambda float64) {
+func (n *Network) SGD(train []Data, test []Data, epochs, batchSize int, learningRate float64, lambda float64, cost Cost) {
 	trainingSize := len(train)
 	for i := 0; i < epochs; i++ {
 		rand.Shuffle(trainingSize, func(i, j int) { train[i], train[j] = train[j], train[i] })
 
 		for j := 0; j < trainingSize; j += batchSize {
 			batch := train[j : j+batchSize]
-			n.ProcessBatch(batch, learningRate, lambda, trainingSize)
+			n.ProcessBatch(batch, learningRate, lambda, trainingSize, cost)
 		}
 
 		fmt.Printf("Epoch %v complete\n", i)
@@ -124,7 +122,7 @@ type backpropResult struct {
 
 // ProcessBatch updates the network's weights and biases by applying gradient
 // descent using backpropagation to a single mini batch.
-func (n *Network) ProcessBatch(train []Data, eta, lambda float64, totalTrainingSize int) {
+func (n *Network) ProcessBatch(train []Data, eta, lambda float64, totalTrainingSize int, cost Cost) {
 	biasNabla := make([][]float64, n.Layers-1)
 	for i := 0; i < n.Layers-1; i++ {
 		biasNabla[i] = make([]float64, len(n.Biases[i]))
@@ -149,7 +147,7 @@ func (n *Network) ProcessBatch(train []Data, eta, lambda float64, totalTrainingS
 
 	for _, x := range train {
 		go func(data Data) {
-			ingest <- n.backprop(data)
+			ingest <- n.backprop(data, cost)
 			wg.Done()
 		}(x)
 	}
@@ -189,7 +187,7 @@ func (n *Network) ProcessBatch(train []Data, eta, lambda float64, totalTrainingS
 	}
 }
 
-func (n Network) backprop(data Data) backpropResult {
+func (n Network) backprop(data Data, cost Cost) backpropResult {
 	// init nablas
 	biasNabla := make([][]float64, n.Layers-1)
 	for i := 0; i < n.Layers-1; i++ {
@@ -237,7 +235,7 @@ func (n Network) backprop(data Data) backpropResult {
 	L := n.Layers - 1
 	delta := make([]float64, len(activations[L]))
 	for i := 0; i < len(activations[L]); i++ {
-		delta[i] = n.Cost(zs[L-1][i], activations[L][i], data.Output[i])
+		delta[i] = cost(zs[L-1][i], activations[L][i], data.Output[i])
 	}
 
 	biasNabla[L-1] = delta

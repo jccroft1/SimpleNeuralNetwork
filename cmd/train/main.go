@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/gob"
 	"flag"
 	"fmt"
 	"log"
@@ -42,7 +43,7 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	n := network.New([]int{784, 30, 10}, network.CrossEntropyCost)
+	n := network.New([]int{784, 30, 10})
 
 	trainingData := data[:50000]
 	testData := []network.Data{}
@@ -50,5 +51,21 @@ func main() {
 		testData = data[50000:]
 	}
 
-	n.SGD(trainingData, testData, 30, 10, 0.5, 5.0)
+	// train
+	n.SGD(trainingData, testData, 30, 10, 0.5, 5.0, network.CrossEntropyCost)
+
+	// save
+	networkWriter, err := os.Create("../../configs/network")
+	if err != nil {
+		fmt.Println("failed to writer network")
+		return
+	}
+
+	networkEncoder := gob.NewEncoder(networkWriter)
+
+	err = networkEncoder.Encode(n)
+	if err != nil {
+		fmt.Println("failed to writer network")
+		return
+	}
 }
