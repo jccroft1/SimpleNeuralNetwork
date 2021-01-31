@@ -29,9 +29,12 @@ The test flag will evaluate the network against a separate set of data.
 
 ## Citations 
 
-This repo is heavily inspired by the below online book by Michael Nielsen. 
+This repo is heavily inspired by the below online book. 
 
 Michael A. Nielsen, "Neural Networks and
 Deep Learning", Determination Press, 2015
 http://neuralnetworksanddeeplearning.com/index.html
 
+
+Mnist import code is based on the Gorgonia example. 
+https://gorgonia.org/tutorials/mnist/
