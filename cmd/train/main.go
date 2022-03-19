@@ -52,7 +52,14 @@ func main() {
 	}
 
 	// train
-	n.SGD(trainingData, testData, 30, 10, 0.5, 5.0, network.CrossEntropyCost)
+	n.SGD(trainingData, testData, network.TrainingParameters{
+		Epochs:        30,
+		BatchSize:     10,
+		LearningRate:  0.5,
+		Lambda:        5.0,
+		Cost:          network.CrossEntropyCost,
+		ImprovementIn: 10,
+	})
 
 	// save
 	networkWriter, err := os.Create("../../configs/network")

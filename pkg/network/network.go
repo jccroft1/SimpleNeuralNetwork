@@ -94,16 +94,25 @@ func (n Network) feedLayer(in []float64, layer int) []float64 {
 	return n.feedLayer(output, layer+1)
 }
 
+type TrainingParameters struct {
+	Epochs, BatchSize    int
+	LearningRate, Lambda float64
+	Cost                 Cost
+	ImprovementIn        int
+}
+
 // SGD trains the neural network using mini-batch stochastic gradient
 // descent.
-func (n *Network) SGD(train []Data, test []Data, epochs, batchSize int, learningRate float64, lambda float64, cost Cost) {
+func (n *Network) SGD(train []Data, test []Data, params TrainingParameters) {
 	trainingSize := len(train)
-	for i := 0; i < epochs; i++ {
+	best := 0
+	lastBest := 0
+	for i := 0; i < params.Epochs; i++ {
 		rand.Shuffle(trainingSize, func(i, j int) { train[i], train[j] = train[j], train[i] })
 
-		for j := 0; j < trainingSize; j += batchSize {
-			batch := train[j : j+batchSize]
-			n.ProcessBatch(batch, learningRate, lambda, trainingSize, cost)
+		for j := 0; j < trainingSize; j += params.BatchSize {
+			batch := train[j : j+params.BatchSize]
+			n.ProcessBatch(batch, trainingSize, params)
 		}
 
 		fmt.Printf("Epoch %v complete\n", i)
@@ -111,6 +120,18 @@ func (n *Network) SGD(train []Data, test []Data, epochs, batchSize int, learning
 			// evaluate on test data
 			correct := n.Evaluate(test)
 			fmt.Printf("Test: %v/%v\n", correct, len(test))
+
+			// improvement-in-n
+			if correct > best {
+				best = correct
+				lastBest = 0
+			} else {
+				lastBest++
+				if lastBest > params.ImprovementIn {
+					fmt.Printf("No improvement in %v rounds, stopping\n", lastBest)
+					break
+				}
+			}
 		}
 	}
 }
@@ -122,7 +143,7 @@ type backpropResult struct {
 
 // ProcessBatch updates the network's weights and biases by applying gradient
 // descent using backpropagation to a single mini batch.
-func (n *Network) ProcessBatch(train []Data, eta, lambda float64, totalTrainingSize int, cost Cost) {
+func (n *Network) ProcessBatch(train []Data, totalTrainingSize int, params TrainingParameters) {
 	biasNabla := make([][]float64, n.Layers-1)
 	for i := 0; i < n.Layers-1; i++ {
 		biasNabla[i] = make([]float64, len(n.Biases[i]))
@@ -147,7 +168,7 @@ func (n *Network) ProcessBatch(train []Data, eta, lambda float64, totalTrainingS
 
 	for _, x := range train {
 		go func(data Data) {
-			ingest <- n.backprop(data, cost)
+			ingest <- n.backprop(data, params.Cost)
 			wg.Done()
 		}(x)
 	}
@@ -168,8 +189,8 @@ func (n *Network) ProcessBatch(train []Data, eta, lambda float64, totalTrainingS
 		}
 	}
 
-	c := eta / float64(len(train))
-	cl := 1 - (eta * (lambda / float64(totalTrainingSize)))
+	c := params.LearningRate / float64(len(train))
+	cl := 1 - (params.LearningRate * (params.Lambda / float64(totalTrainingSize)))
 	for i := range n.Biases {
 		for j := range n.Biases[i] {
 			n.Biases[i][j] -= biasNabla[i][j] * c

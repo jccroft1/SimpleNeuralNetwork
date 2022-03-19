@@ -24,7 +24,6 @@ The test flag will evaluate the network against a separate set of data.
 
 ## To Do 
 
-* Load and save network parameters 
 * Standalone 'deployable' network 
 
 ## Citations 
